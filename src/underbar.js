@@ -95,7 +95,7 @@
     // TIP: see if you can re-use _.filter() here, without simply
     // copying code in and modifying it
     let result = [];
-    _.each(collection, function(item, index) {
+    _.each(collection, function(item) {
       if (!test(item)) {
         result.push(item);
       }
@@ -201,12 +201,20 @@
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
+    iterator = iterator || _.identity;
+    return _.reduce(collection, function(acc, item) {
+      return !!iterator(item) && acc;
+    }, true);
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
+    iterator = iterator || _.identity;
+    return !_.every(collection, function(item) {
+      return !iterator(item);
+    });
   };
 
 
@@ -229,11 +237,24 @@
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+    _.each(arguments, function(merged) {
+      for (let key in merged)
+        obj[key] = merged[key];
+    });
+    return obj;
   };
+
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    _.each(arguments, function(merged) {
+      for (let key in merged)
+        if(!(key in obj)) {
+          obj[key] = merged[key];
+        }
+    });
+    return obj;
   };
 
 
@@ -251,8 +272,8 @@
     // TIP: These variables are stored in a "closure scope" (worth researching),
     // so that they'll remain available to the newly-generated function every
     // time it's called.
-    var alreadyCalled = false;
-    var result;
+    let alreadyCalled = false;
+    let result;
 
     // TIP: We'll return a new function that delegates to the old one, but only
     // if it hasn't been called before.
@@ -277,6 +298,18 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    let cache = {};
+    return function() {
+      let args = JSON.stringify(arguments);
+      if(cache[args]) {
+        return cache[args];
+      }
+      else {
+        let val = func.apply(this, arguments);
+        cache[args] = val;
+        return val;
+      } 
+    };
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -286,6 +319,8 @@
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    let args = [...arguments].slice(2);
+    return setTimeout(func, wait, ...args);
   };
 
 
@@ -300,6 +335,14 @@
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
+    let copy = array.slice();
+    for(let i = copy.length - 1; i > 0; i--) {
+      let j = Math.floor(Math.random() * (i + 1));
+      let k = copy[i];
+      copy[i] = copy[j];
+      copy[j] = k;
+    }
+    return copy;
   };
 
 
